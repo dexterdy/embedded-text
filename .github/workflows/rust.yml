@@ -11,7 +11,7 @@ env:
 
 jobs:
 
-  formatting:
+  linting:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,10 +23,13 @@ jobs:
         toolchain: stable
         target: thumbv7em-none-eabihf
         override: true
-        components: rustfmt
+        components: rustfmt, clippy
 
     - name: Check formatting
       run: cargo fmt --all -- --check
+
+    - name: Run clippy
+      run: cargo clippy -- -D warnings
 
   build-nostd:
     runs-on: ubuntu-latest
