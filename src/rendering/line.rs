@@ -23,12 +23,12 @@ use embedded_graphics::{
 
 impl<C> ChangeTextStyle<C>
 where
-    C: PixelColor + Default,
+    C: PixelColor,
 {
     pub(crate) fn apply<S: CharacterStyle<Color = C>>(self, text_renderer: &mut S) {
         match self {
             ChangeTextStyle::Reset => {
-                text_renderer.set_text_color(Some(C::default()));
+                text_renderer.set_text_color(None);
                 text_renderer.set_background_color(None);
                 text_renderer.set_underline_color(DecorationColor::None);
                 text_renderer.set_strikethrough_color(DecorationColor::None);
@@ -96,7 +96,6 @@ where
     F: CharacterStyle + TextRenderer,
     D: DrawTarget<Color = <F as TextRenderer>::Color>,
     M: Plugin<'a, <F as TextRenderer>::Color>,
-    <F as CharacterStyle>::Color: Default,
 {
     type Error = D::Error;
     type Color = <F as CharacterStyle>::Color;
@@ -147,7 +146,6 @@ impl<'a, 'b, 'c, F, M> StyledLineRenderer<'a, 'b, 'c, F, M>
 where
     F: TextRenderer<Color = <F as CharacterStyle>::Color> + CharacterStyle,
     M: Plugin<'a, <F as TextRenderer>::Color> + Plugin<'a, <F as CharacterStyle>::Color>,
-    <F as CharacterStyle>::Color: Default,
 {
     #[inline]
     pub(crate) fn draw<D>(mut self, display: &mut D) -> Result<(), D::Error>
@@ -234,7 +232,7 @@ mod test {
         pattern: &[&str],
     ) where
         S: TextRenderer<Color = <S as CharacterStyle>::Color> + CharacterStyle,
-        <S as CharacterStyle>::Color: embedded_graphics::mock_display::ColorMapping + Default,
+        <S as CharacterStyle>::Color: embedded_graphics::mock_display::ColorMapping,
     {
         let parser = Parser::parse(text);
         let cursor = LineCursor::new(

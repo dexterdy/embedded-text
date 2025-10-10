@@ -47,7 +47,6 @@ impl<'a, F, M> Drawable for TextBox<'a, F, M>
 where
     F: TextRenderer<Color = <F as CharacterStyle>::Color> + CharacterStyle,
     M: Plugin<'a, <F as TextRenderer>::Color> + Plugin<'a, <F as CharacterStyle>::Color>,
-    <F as CharacterStyle>::Color: Default,
 {
     type Color = <F as CharacterStyle>::Color;
     type Output = &'a str;
