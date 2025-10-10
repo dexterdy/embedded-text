@@ -1,3 +1,10 @@
+0.7.3 (2025-10-10)
+==================
+
+ - [#173] Fix `^[0m` ANSI escape sequence
+
+[#173]: https://github.com/embedded-graphics/embedded-text/pull/173
+
 0.7.2 (2024-05-27)
 ==================
 
@@ -176,7 +183,7 @@
 
  * **breaking** [#125] Raised MSRV to `1.46.0`
  * **breaking** [#125] Chaneged how text height is measured.
- 
+
 ## Removed:
 
 * [#114] `TextBox` no longer implements `PartialEq` and `Eq`
@@ -239,7 +246,7 @@
 ==================
 
 ## Changed:
- 
+
  * Updated `ansi-parser` dependency to `0.8.0`.
  * ANSI sequence support now requires the `ansi` feature which is on by default.
  * Fields of the `style::color::Rgb` struct are now public.
