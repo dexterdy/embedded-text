@@ -22,7 +22,7 @@ pub fn str_width_and_left_offset(renderer: &impl TextRenderer, s: &str) -> (u32,
     let tm = renderer.measure_string(s, Point::zero(), Baseline::Top);
     (
         tm.next_position.x as u32,
-        tm.bounding_box.top_left.x.min(0).abs() as u32,
+        tm.bounding_box.top_left.x.min(0).unsigned_abs(),
     )
 }
 
