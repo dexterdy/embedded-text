@@ -15,6 +15,13 @@ pub struct TextBoxStyleBuilder {
     trailing_spaces: Option<bool>,
 }
 
+impl Default for TextBoxStyleBuilder {
+    #[inline]
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TextBoxStyleBuilder {
     /// Create a new builder object.
     #[inline]

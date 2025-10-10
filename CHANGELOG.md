@@ -1,3 +1,10 @@
+Unreleased
+==========
+
+ - [#174] Implement `Default` for `TextBoxStyleBuilder`
+
+[#174]: https://github.com/embedded-graphics/embedded-text/pull/174
+
 0.7.3 (2025-10-10)
 ==================
 
