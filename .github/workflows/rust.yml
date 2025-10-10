@@ -31,9 +31,6 @@ jobs:
   build-nostd:
     runs-on: ubuntu-latest
 
-    needs:
-    - formatting
-
     steps:
     - uses: actions/checkout@v2
 
@@ -47,11 +44,24 @@ jobs:
     - name: Build no_std
       run: cargo build --verbose --target thumbv7em-none-eabihf -Z avoid-dev-deps
 
-  build:
+  build-msrv:
     runs-on: ubuntu-latest
 
-    needs:
-    - formatting
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: 1.61
+        target: thumbv7em-none-eabihf
+        override: true
+
+    - name: Build with MSRV
+      run: cargo build
+
+  build:
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
@@ -64,9 +74,6 @@ jobs:
 
           - name: nightly
             rust: nightly
-
-          - name: msrv
-            rust: 1.61.0
 
     steps:
     - uses: actions/checkout@v2
@@ -132,7 +139,7 @@ jobs:
         toolchain: stable
         target: thumbv7em-none-eabihf
         override: true
-    
+
     - name: Check doc links
       run: |
         cargo doc --color=never &> ./out
