@@ -641,10 +641,6 @@ impl TextBoxStyle {
             let lm =
                 with_trailing_spaces.measure_line(&plugin, character_style, &mut parser, max_width);
 
-            if prev_end == LineEndType::LineBreak && !lm.is_empty() {
-                height += line_height;
-            }
-
             match lm.line_end_type {
                 LineEndType::CarriageReturn | LineEndType::LineBreak => {}
                 LineEndType::NewLine => height += line_height + self.paragraph_spacing,
