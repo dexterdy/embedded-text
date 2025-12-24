@@ -544,6 +544,117 @@ impl TextBoxStyle {
             prev_end = lm.line_end_type;
         }
     }
+
+    /// Looks up position and dimensions of a character given it's index
+    ///
+    /// # Example: loops up nth character of text when rendered using a 6x9 MonoFont and 72px width.
+    ///
+    /// ```rust
+    /// # use embedded_text::style::TextBoxStyleBuilder;
+    /// # use embedded_graphics::{
+    /// #     mono_font::{ascii::FONT_6X9, MonoTextStyleBuilder},
+    /// #     pixelcolor::BinaryColor,
+    /// # };
+    /// #
+    /// let character_style = MonoTextStyleBuilder::new()
+    ///     .font(&FONT_6X9)
+    ///     .text_color(BinaryColor::On)
+    ///     .build();
+    /// let style = TextBoxStyleBuilder::new().build();
+    ///
+    /// let (x, y, width, height) = style.lookup_char_position(
+    ///     &character_style,
+    ///     "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+    ///     12
+    ///     72,
+    /// );
+    ///
+    /// // Expect 7 lines of text, wrapped in something like the following:
+    ///
+    /// // |Lorem Ipsum |
+    /// // |is simply   |
+    /// // |dummy text  |
+    /// // |of the      |
+    /// // |printing and|
+    /// // |typesetting |
+    /// // |industry.   |
+    ///
+    /// assert_eq!(0, x);
+    /// assert_eq!(9, y);
+    /// assert_eq!(6, width);
+    /// assert_eq!(9, height);
+    /// ```
+    #[inline]
+    #[must_use]
+    pub fn lookup_char_position<S>(
+        &self,
+        character_style: &S,
+        text: &str,
+        char_index: usize,
+        max_width: u32,
+    ) -> (u32, u32, u32, u32)
+    where
+        S: TextRenderer,
+    {
+        let plugin = PluginWrapper::new(NoPlugin::new());
+        self.lookup_char_position_impl(plugin, character_style, text, char_index, max_width)
+    }
+
+    pub(crate) fn lookup_char_position_impl<'a, S, M>(
+        &self,
+        plugin: PluginWrapper<'a, M, S::Color>,
+        character_style: &S,
+        text: &'a str,
+        char_index: usize,
+        max_width: u32,
+    ) -> (u32, u32, u32, u32)
+    where
+        S: TextRenderer,
+        M: Plugin<'a, S::Color>,
+    {
+        if text.chars().nth(char_index).is_none() {
+            panic!("Character index out of range")
+        }
+
+        let char_byte_index = text.char_indices().nth(char_index).unwrap().0;
+        let next_char_byte_index = text
+            .char_indices()
+            .nth(char_index + 1)
+            .map_or(text.len(), |(i, _)| i);
+        let char_str = &text[char_byte_index..next_char_byte_index];
+
+        let mut parser = Parser::parse(&text[0..char_byte_index]); // not next_char, because we want top-left, not top-right
+        let base_line_height = character_style.line_height();
+        let line_height = self.line_height.to_absolute(base_line_height);
+        let mut height = base_line_height;
+
+        plugin.set_state(ProcessingState::Measure);
+
+        let mut prev_end = LineEndType::EndOfText;
+
+        loop {
+            plugin.new_line();
+            let lm = self.measure_line(&plugin, character_style, &mut parser, max_width);
+
+            if prev_end == LineEndType::LineBreak && !lm.is_empty() {
+                height += line_height;
+            }
+
+            match lm.line_end_type {
+                LineEndType::CarriageReturn | LineEndType::LineBreak => {}
+                LineEndType::NewLine => height += line_height + self.paragraph_spacing,
+                LineEndType::EndOfText => {
+                    return (
+                        lm.width,
+                        height - line_height, // we want top-left, not bottom-left
+                        str_width(character_style, char_str),
+                        line_height,
+                    );
+                }
+            }
+            prev_end = lm.line_end_type;
+        }
+    }
 }
 
 #[cfg(test)]
