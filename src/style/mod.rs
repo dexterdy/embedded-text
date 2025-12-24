@@ -650,8 +650,8 @@ impl TextBoxStyle {
                 LineEndType::NewLine => height += line_height + self.paragraph_spacing,
                 LineEndType::EndOfText => {
                     return (
-                        lm.width - char_width, // we want top-left, not top-right
-                        height - line_height,  // we want top-left, not bottom-left
+                        lm.width.saturating_sub(char_width), // we want top-left, not top-right
+                        height.saturating_sub(line_height),  // we want top-left, not bottom-left
                         char_width,
                         line_height,
                     );
