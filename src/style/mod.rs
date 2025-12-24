@@ -565,7 +565,7 @@ impl TextBoxStyle {
     /// let (x, y, width, height) = style.lookup_char_position(
     ///     &character_style,
     ///     "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
-    ///     12
+    ///     12,
     ///     72,
     /// );
     ///
@@ -622,8 +622,9 @@ impl TextBoxStyle {
             .nth(char_index + 1)
             .map_or(text.len(), |(i, _)| i);
         let char_str = &text[char_byte_index..next_char_byte_index];
+        let char_width = str_width(character_style, char_str);
 
-        let mut parser = Parser::parse(&text[0..char_byte_index]); // not next_char, because we want top-left, not top-right
+        let mut parser = Parser::parse(&text[0..next_char_byte_index]);
         let base_line_height = character_style.line_height();
         let line_height = self.line_height.to_absolute(base_line_height);
         let mut height = base_line_height;
@@ -645,9 +646,9 @@ impl TextBoxStyle {
                 LineEndType::NewLine => height += line_height + self.paragraph_spacing,
                 LineEndType::EndOfText => {
                     return (
-                        lm.width,
-                        height - line_height, // we want top-left, not bottom-left
-                        str_width(character_style, char_str),
+                        lm.width - char_width, // we want top-left, not top-right
+                        height - line_height,  // we want top-left, not bottom-left
+                        char_width,
                         line_height,
                     );
                 }
