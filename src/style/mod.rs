@@ -634,8 +634,6 @@ impl TextBoxStyle {
 
         plugin.set_state(ProcessingState::Measure);
 
-        let mut prev_end = LineEndType::EndOfText;
-
         loop {
             plugin.new_line();
             let lm =
@@ -653,7 +651,6 @@ impl TextBoxStyle {
                     );
                 }
             }
-            prev_end = lm.line_end_type;
         }
     }
 }
