@@ -250,7 +250,7 @@ where
                 }
 
                 self.plugin
-                    .consume_partial((consumed + 1).min(space_count) as usize);
+                    .consume_partial(consumed.min(space_count) as usize);
                 Ok(true)
             }
         }

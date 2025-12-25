@@ -329,6 +329,9 @@ pub(crate) struct LineMeasurement {
     /// Width in pixels, using the default space width returned by the text renderer.
     pub width: u32,
 
+    /// Length in amount of characters
+    pub character_count: u32,
+
     /// What kind of line ending was encountered.
     pub line_end_type: LineEndType,
 
@@ -357,6 +360,7 @@ struct MeasureLineElementHandler<'a, S> {
     right: u32,
     partial_space_count: u32,
     space_count: u32,
+    character_count: u32,
 }
 
 impl<'a, S> MeasureLineElementHandler<'a, S> {
@@ -402,6 +406,7 @@ impl<'a, S: TextRenderer> ElementHandler for MeasureLineElementHandler<'a, S> {
         self.pos = self.pos.max(self.cursor);
         self.right = self.pos;
         self.space_count = self.partial_space_count;
+        self.character_count += str.chars().count() as u32;
 
         Ok(())
     }
@@ -452,12 +457,14 @@ impl TextBoxStyle {
             right: 0,
             partial_space_count: 0,
             space_count: 0,
+            character_count: 0,
         };
         let last_token = iter.process(&mut handler).unwrap();
 
         LineMeasurement {
             max_line_width,
             width: handler.right(),
+            character_count: handler.character_count + handler.partial_space_count,
             space_count: handler.space_count(),
             line_end_type: last_token,
         }
@@ -624,36 +631,38 @@ impl TextBoxStyle {
         let char_str = &text[char_byte_index..next_char_byte_index];
         let char_width = str_width(character_style, char_str);
 
-        let mut parser = Parser::parse(&text[0..next_char_byte_index]);
+        let mut parser = Parser::parse(text);
         let base_line_height = character_style.line_height();
         let line_height = self.line_height.to_absolute(base_line_height);
         let mut height = base_line_height;
 
         plugin.set_state(ProcessingState::Measure);
 
-        let mut prev_end = LineEndType::EndOfText;
+        let mut prev_index = 0;
 
         loop {
             plugin.new_line();
             let lm = self.measure_line(&plugin, character_style, &mut parser, max_width);
 
-            if prev_end == LineEndType::LineBreak && !lm.is_empty() {
-                height += line_height;
+            match lm.line_end_type {
+                LineEndType::LineBreak => height += line_height,
+                LineEndType::NewLine => height += line_height + self.paragraph_spacing,
+                _ => {}
             }
 
-            match lm.line_end_type {
-                LineEndType::CarriageReturn | LineEndType::LineBreak => {}
-                LineEndType::NewLine => height += line_height + self.paragraph_spacing,
-                LineEndType::EndOfText => {
-                    return (
-                        lm.width.saturating_sub(char_width), // we want top-left, not top-right
-                        height.saturating_sub(line_height),  // we want top-left, not bottom-left
-                        char_width,
-                        line_height,
-                    );
-                }
+            let cur_index = prev_index + lm.character_count as usize - 1;
+            if cur_index >= char_index {
+                // character appeared on this line
+                let start_line_byte_index = text.char_indices().nth(prev_index).unwrap().0;
+                let x = str_width(
+                    character_style,
+                    &text[start_line_byte_index..char_byte_index],
+                );
+                let y = height - line_height;
+                return (x, y, char_width, character_style.line_height());
             }
-            prev_end = lm.line_end_type;
+
+            prev_index += lm.character_count as usize;
         }
     }
 }
