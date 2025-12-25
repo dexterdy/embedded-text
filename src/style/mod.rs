@@ -638,22 +638,27 @@ impl TextBoxStyle {
 
         plugin.set_state(ProcessingState::Measure);
 
-        let mut prev_index = 0;
+        let mut line_start_index = 0;
 
         loop {
             plugin.new_line();
             let lm = self.measure_line(&plugin, character_style, &mut parser, max_width);
 
+            let mut character_count = lm.character_count as usize;
+
             match lm.line_end_type {
                 LineEndType::LineBreak => height += line_height,
-                LineEndType::NewLine => height += line_height + self.paragraph_spacing,
+                LineEndType::NewLine => {
+                    height += line_height + self.paragraph_spacing;
+                    character_count += 1;
+                }
                 _ => {}
             }
 
-            let cur_index = prev_index + lm.character_count as usize - 1;
+            let cur_index = line_start_index + character_count - 1;
             if cur_index >= char_index {
                 // character appeared on this line
-                let start_line_byte_index = text.char_indices().nth(prev_index).unwrap().0;
+                let start_line_byte_index = text.char_indices().nth(line_start_index).unwrap().0;
                 let x = str_width(
                     character_style,
                     &text[start_line_byte_index..char_byte_index],
@@ -662,7 +667,7 @@ impl TextBoxStyle {
                 return (x, y, char_width, character_style.line_height());
             }
 
-            prev_index += lm.character_count as usize;
+            line_start_index += character_count
         }
     }
 }
