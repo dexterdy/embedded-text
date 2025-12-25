@@ -634,10 +634,16 @@ impl TextBoxStyle {
 
         plugin.set_state(ProcessingState::Measure);
 
+        let mut prev_end = LineEndType::EndOfText;
+
         loop {
             plugin.new_line();
             let lm =
                 with_trailing_spaces.measure_line(&plugin, character_style, &mut parser, max_width);
+
+            if prev_end == LineEndType::LineBreak && !lm.is_empty() {
+                height += line_height;
+            }
 
             match lm.line_end_type {
                 LineEndType::CarriageReturn | LineEndType::LineBreak => {}
@@ -651,6 +657,7 @@ impl TextBoxStyle {
                     );
                 }
             }
+            prev_end = lm.line_end_type;
         }
     }
 }
