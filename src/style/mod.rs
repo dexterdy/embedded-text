@@ -616,9 +616,6 @@ impl TextBoxStyle {
             panic!("Character index out of range")
         }
 
-        let mut with_trailing_spaces = self.clone();
-        with_trailing_spaces.trailing_spaces = true;
-
         let char_byte_index = text.char_indices().nth(char_index).unwrap().0;
         let next_char_byte_index = text
             .char_indices()
@@ -638,8 +635,7 @@ impl TextBoxStyle {
 
         loop {
             plugin.new_line();
-            let lm =
-                with_trailing_spaces.measure_line(&plugin, character_style, &mut parser, max_width);
+            let lm = self.measure_line(&plugin, character_style, &mut parser, max_width);
 
             if prev_end == LineEndType::LineBreak && !lm.is_empty() {
                 height += line_height;
