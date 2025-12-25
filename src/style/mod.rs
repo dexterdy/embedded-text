@@ -646,13 +646,8 @@ impl TextBoxStyle {
 
             let mut character_count = lm.character_count as usize;
 
-            match lm.line_end_type {
-                LineEndType::LineBreak => height += line_height,
-                LineEndType::NewLine => {
-                    height += line_height + self.paragraph_spacing;
-                    character_count += 1;
-                }
-                _ => {}
+            if lm.line_end_type == LineEndType::NewLine {
+                character_count += 1;
             }
 
             let cur_index = line_start_index + character_count - 1;
@@ -665,6 +660,14 @@ impl TextBoxStyle {
                 );
                 let y = height - line_height;
                 return (x, y, char_width, character_style.line_height());
+            }
+
+            match lm.line_end_type {
+                LineEndType::LineBreak => height += line_height,
+                LineEndType::NewLine => {
+                    height += line_height + self.paragraph_spacing;
+                }
+                _ => {}
             }
 
             line_start_index += character_count
